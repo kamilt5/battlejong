@@ -4,6 +4,10 @@ import WebSocket from "ws";
 
 import { shuffle } from "./board";  
 
+let development: number = 0;
+if (process.argv[2] === "dev")
+    development = 1;
+
 const players: any = {};
 
 const app: Express = express();
@@ -39,17 +43,25 @@ wsServer.on("connection", (socket: WebSocket) => {
                     }
                 }
 
-                if (playersDone == 2) {   // 2 for production; 1 for debuging
-                    let winningPID: string;
+                if (development) {
                     const playerKeys: string[] = Object.keys(players);
-                    if (players[playerKeys[0]].score < players[playerKeys[1]].score )
-                        winningPID = playerKeys[1];
-                    else 
-                        winningPID = playerKeys[0];
-
                     wsServer.clients.forEach((inClient: WebSocket) => {
-                    inClient.send(`gameOver_${winningPID}`);
-                    });
+                        inClient.send(`gameOver_${playerKeys[0]}`);
+                        });
+                }
+                else {
+                    if (playersDone == 2) {   // 2 for production; 1 for debuging
+                        let winningPID: string;
+                        const playerKeys: string[] = Object.keys(players);
+                        if (players[playerKeys[0]].score < players[playerKeys[1]].score )
+                            winningPID = playerKeys[1];
+                        else 
+                            winningPID = playerKeys[0];
+
+                        wsServer.clients.forEach((inClient: WebSocket) => {
+                        inClient.send(`gameOver_${winningPID}`);
+                        });
+                    }
                 }
         }
     });
@@ -57,11 +69,22 @@ wsServer.on("connection", (socket: WebSocket) => {
     const pid: string = `pid${new Date().getTime()}`;
     players[pid] = { score : 0, stillPlaying : true};
     socket.send(`connected_${pid}`);
+    
 
-    if (Object.keys(players).length === 2) {
+    if (development === 0) {
+        if (Object.keys(players).length === 2) {
+            const shuffledLayout: number[][][] = shuffle();
+            wsServer.clients.forEach((inClient: WebSocket) => {
+                inClient.send(`start_${JSON.stringify(shuffledLayout)}`);
+            });
+        }
+    }
+    else {
         const shuffledLayout: number[][][] = shuffle();
         wsServer.clients.forEach((inClient: WebSocket) => {
             inClient.send(`start_${JSON.stringify(shuffledLayout)}`);
         });
     }
+    console.log(development);
+
 });
