@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "My webpack project",
   "main": "index.js",
-  "scripts": {
+  "scripts": { 
     "test": "npx jest",
     "start": "node ./dist/server.js",
-    "compile": "npx tsc && node ./dist/server.js",
+    "compile": "npx tsc && node ./dist/server.js $npm_config_mode",
     "dev": "node ./node_modules/nodemon/bin/nodemon.js -e ts --exec \"npm run compile\"",
     "build": "webpack"
   },
