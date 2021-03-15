@@ -9,3 +9,7 @@ server/node_modules/
 client/dist/
 server/dist/
 
+
+# npm files #
+#############
+package-lock.json
