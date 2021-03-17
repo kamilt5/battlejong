@@ -48,13 +48,12 @@ const ControlArea = ({ state }: any) => (
           { state.gameOutcome }   
         </div>
       }
-      {
-        state.moreMoves !== "" &&
-          <div style={{ color : "#ff0000", fontWeight : "lighter", 
-            textAlign: "center" }}>
-            { state.moreMoves }
-            <br />
-          </div>
+      { state.moreMoves !== "" &&
+        <div style={{ color : "#ff0000", fontWeight : "lighter", 
+          textAlign: "center" }}>
+          { state.moreMoves }
+          <br />
+        </div>
       }
     </React.Fragment>
 );
