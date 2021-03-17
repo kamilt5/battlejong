@@ -32,15 +32,16 @@ function createState(inParentElement: React.Component) {
         selectedTiles : [] as ISelectedTile[],
         gameOutcome : "" as string,
         pid : "" as string,
-        socketComm : createSocketCommunication(inParentElement) as Function,
+        socketComm : createSocketCommunication(inParentElement) as Function, //WebSocket
         timeSinceLastMatch : 0 as number,
         moreMoves : "" as string,
-        helpLeft : 3 as number,
+        helpLeft : 0 as number,
         
         handleMessage_connected : function(inPID: string) {
             this.setState({pid : inPID });
         }.bind(inParentElement),
 
+        // updating opponent score; if inPID is your pid, then do nothing
         handleMessage_update : function(inPID: string, inScore: string) {
             if (inPID !== this.state.pid) {
                 const scores: IScores = { ...this.state.scores }
@@ -49,6 +50,7 @@ function createState(inParentElement: React.Component) {
             }
         }.bind(inParentElement),
 
+        // receive winner pid
         handleMessage_gameOver : function(inPID: string) {
             if (inPID === this.state.pid) {
                 this.setState({ gameState : "gameOver", gameOutcome : `You won.`})
@@ -62,7 +64,8 @@ function createState(inParentElement: React.Component) {
             this.setState({
                 timeSinceLastMatch : new Date().getTime(),
                 gameState : "playing",
-                layout : inLayout 
+                layout : inLayout,
+                helpLeft : 3
             });
         }.bind(inParentElement),
 
@@ -153,6 +156,7 @@ function createState(inParentElement: React.Component) {
             });
         }.bind(inParentElement),
 
+        // tile can be selected, when there is nothing above it and nothing on it left or right side
         canTileBeSelected : function(inLayer: number, inRow:number, inColumn: number ): boolean {
             return (inLayer == 4 ||
               this.state.layout[inLayer + 1][inRow][inColumn] <= 0) &&
@@ -161,6 +165,11 @@ function createState(inParentElement: React.Component) {
             // TODO
         }.bind(inParentElement),
 
+        /**
+         * brute-force approach
+         * if tile can be selected, then it is added to list
+         * if any recond in list have two or more elements, then there are more moves
+         */
         anyMovesLeft : function(inLayout: number[][][]): string {
             let numTiles: number = 0;
             const selectedTiles: number[] = [ ];
@@ -195,12 +204,16 @@ function createState(inParentElement: React.Component) {
                       return "yes";
                     }
                   }
-            
-            console.log("moves_no");
             return "no";
         }.bind(inParentElement),
 
+        /**
+         * similar to anyMovesLeft, also brute-force approach
+         * if there are two the same tiles which can be selected, then they will be higlighted
+         */
         moveHelp : async function(): Promise<void> {
+            if (this.state.gameState !== "playing") 
+                return;
             if (this.state.helpLeft <= 0) {
                 this.setState({moreMoves : "No more elp."});
                 return;
@@ -225,13 +238,18 @@ function createState(inParentElement: React.Component) {
                                     leftMoves[tileVal] = [];
                                     leftMoves[tileVal].push(position);
                                 }
+                                /**
+                                 * highlight messages
+                                 * it adds 500 value to tiles, then setTimeout for 1,5 sec and then
+                                 * substract 500 value */ 
                                 else {
                                     const layoutCopy: number[][][] = this.state.layout.slice(0);
                                     const scoresCopy: IScores = { ...this.state.scores };
 
                                     const firstPos: string[] = leftMoves[tileVal][0].split('_');
                                     const secondPos: string[] = position.split('_');
-
+                                    
+                                    // points substracting is: 5 -> 10 -> 15
                                     const minusPoints: number = 15 * ((4 - this.state.helpLeft) / 3 );
                                     scoresCopy.player -= minusPoints;
                                     const helpMovesLeft: number = this.state.helpLeft - 1
@@ -239,8 +257,7 @@ function createState(inParentElement: React.Component) {
                                     layoutCopy[parseInt(firstPos[0])][parseInt(firstPos[1])][parseInt(firstPos[2])] += 500;
                                     layoutCopy[parseInt(secondPos[0])][parseInt(secondPos[1])][parseInt(secondPos[2])] += 500;
             
-                                    this.setState({moreMoves : `${leftMoves[tileVal][0]}/${position}`, 
-                                                  layout : layoutCopy, scores : scoresCopy, helpLeft : helpMovesLeft});
+                                    this.setState({layout : layoutCopy, scores : scoresCopy, helpLeft : helpMovesLeft});
             
                                     await new Promise(r => setTimeout(r, 1500));
             
@@ -250,13 +267,14 @@ function createState(inParentElement: React.Component) {
                                     this.setState({layout : layoutCopy});
                                     return; 
                                 }
-                            }
-                        }
+                            }// if (tileCanBeSelected)
+                        }// if (tileVar > 0)
                     }
+            
             this.setState({moreMoves : "No more moves"});
         }.bind(inParentElement),
-    }
-}
+    }// return
+}// function createState()
 
 
 export default createState;

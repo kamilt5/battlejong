@@ -7,6 +7,7 @@ const requestImageFile = require.context("../../img", true, /.png$/, 'sync');
 
 
 const PlayerBoard = ({ state }: any) => {
+  
     /* tiles format is 83x99px
       Width 72px; Height 88px; Shadow 11x11px
     */
