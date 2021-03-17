@@ -4,6 +4,7 @@ import ControlArea from "./ControlArea";
 import PlayerBoard from "./PlayerBoard";
 import createState from "../state";
 
+
 class BaseLayout extends React.Component {
     state = createState(this);
 
@@ -20,9 +21,6 @@ class BaseLayout extends React.Component {
                 <button className="helpButton" onClick={() => this.state.moveHelp()}>
                   Help
                 </button>
-                <p style={{position : "absolute", right : "25px", top : "340px"}}>
-                  Left {this.state.helpLeft }
-                </p>
               </div>
             </div>
         );
